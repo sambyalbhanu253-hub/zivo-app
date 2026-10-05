@@ -18,6 +18,9 @@ jobs:
         distribution: 'temurin'
         java-version: '21'
 
+    - name: Install Node.js Dependencies
+      run: npm install
+
     - name: Grant execute permission for gradlew
       run: chmod +x android/gradlew
 
