@@ -1,0 +1,9 @@
+import { CapacitorConfig } from '@capacitor/cli';
+
+const config: CapacitorConfig = {
+  appId: 'com.zivo.app',
+  appName: 'ZIVO',
+  webDir: 'dist'
+};
+
+export default config;
