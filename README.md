@@ -16,11 +16,11 @@ For this step ONLY:
 
 - Create the main app structure and navigation.
 - Add a bottom navigation bar with: Home, Shorts, Create, Discover, Profile.
-- Create a simple ZIVO logo/text header.
+- Create a ZIVO logo/text header.
 - Make the UI modern, fast and responsive on Android phone screens.
 - Use a dark premium social-media style.
 - Create placeholder screens for each navigation item.
-- Do NOT add authentication, database, messaging, payments, AI features, or video upload yet.
+- App authentication currently uses a device-local demo provider; it does not send real email or create server-backed identities. Do not treat it as production account authentication.
 
 Focus only on the frontend foundation and navigation. Keep the implementation simple and production-ready.
 
@@ -39,7 +39,11 @@ npm run dev
 
 ## Framework
 
-This project uses **React-Ts**.
+This project uses React 19, TypeScript, Vite, and React Router. The app entry point is `src/main.tsx`, routes are defined in `src/App.tsx`, and the five primary tab screens live in `src/pages/`. Shared layout components are in `src/components/`; global design styles are in `main.css` and `src/styles/app.css`.
+
+The Shorts route loads published video records from the GenMB key-value store, snaps one video to each viewport, and only plays the video that is at least 65% visible. Inactive videos are paused and muted; sound can be enabled for the active video.
+
+The ZIVO header, app icons, PWA manifest, and startup splash use the Royal Gold and Obsidian badge artwork.
 
 ## Progressive Web App (PWA)
 

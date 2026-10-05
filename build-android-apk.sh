@@ -2,7 +2,11 @@
 # Run locally or on any CI runner; no GitHub Actions workflow is required.
 set -Eeuo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="$SCRIPT_DIR"
+if [[ ! -f "$ROOT/package.json" && -f "$ROOT/../package.json" ]]; then
+  ROOT="$(cd "$ROOT/.." && pwd)"
+fi
 cd "$ROOT"
 
 fail() { printf 'ZIVO Android build: %s\n' "$*" >&2; exit 1; }

@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="ZIVO Royal Gold and Obsidian logo">
+  <defs>
+    <radialGradient id="obsidian" cx="32%" cy="23%" r="82%">
+      <stop stop-color="#22201c"/>
+      <stop offset=".48" stop-color="#10100f"/>
+      <stop offset="1" stop-color="#050505"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="158" y1="125" x2="351" y2="363" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff2bc"/>
+      <stop offset=".17" stop-color="#d9b45c"/>
+      <stop offset=".34" stop-color="#fff0a6"/>
+      <stop offset=".52" stop-color="#a97924"/>
+      <stop offset=".7" stop-color="#f8df88"/>
+      <stop offset=".87" stop-color="#c19235"/>
+      <stop offset="1" stop-color="#fff0b5"/>
+    </linearGradient>
+    <linearGradient id="rim" x1="73" y1="67" x2="439" y2="454" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff0b3"/>
+      <stop offset=".28" stop-color="#a87b2d"/>
+      <stop offset=".56" stop-color="#f4dc8b"/>
+      <stop offset=".82" stop-color="#8c6221"/>
+      <stop offset="1" stop-color="#e7c56d"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="188" y1="136" x2="320" y2="198" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff9dd" stop-opacity=".92"/>
+      <stop offset="1" stop-color="#fff9dd" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="gold-shadow" x="-.3" y="-.3" width="1.6" height="1.7" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="5" result="blur"/>
+      <feFlood flood-color="#d5a842" flood-opacity=".3"/>
+      <feComposite in2="blur" operator="in"/>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="texture">
+      <feTurbulence type="fractalNoise" baseFrequency=".72" numOctaves="3" seed="19"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="table" tableValues="0 .11"/></feComponentTransfer>
+    </filter>
+    <clipPath id="badge-clip"><circle cx="256" cy="256" r="245"/></clipPath>
+  </defs>
+  <circle cx="256" cy="256" r="250" fill="#050505"/>
+  <circle cx="256" cy="256" r="246" fill="url(#rim)"/>
+  <circle cx="256" cy="256" r="238" fill="url(#obsidian)"/>
+  <g clip-path="url(#badge-clip)">
+    <path d="M31 126C134 46 319 28 471 110v-82H31z" fill="#fff" opacity=".025"/>
+    <rect x="18" y="18" width="476" height="476" filter="url(#texture)" opacity=".23"/>
+    <circle cx="256" cy="256" r="222" fill="none" stroke="#f5dfa0" stroke-opacity=".13" stroke-width="1.5"/>
+    <path d="M167 147h188l-151 126h151" fill="none" stroke="#5e451d" stroke-width="43" stroke-linecap="round" stroke-linejoin="round" transform="translate(0 7)" opacity=".72"/>
+    <path d="m171 172 84 154 84-154" fill="none" stroke="#57411e" stroke-width="37" stroke-linecap="round" stroke-linejoin="round" transform="translate(0 6)" opacity=".76"/>
+    <g filter="url(#gold-shadow)">
+      <path d="M167 147h188L204 273h151" fill="none" stroke="url(#gold)" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="m171 172 84 154 84-154" fill="none" stroke="url(#gold)" stroke-width="27" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M179 146h156" fill="none" stroke="url(#shine)" stroke-width="4" stroke-linecap="round" opacity=".88"/>
+      <path d="m179 177 73 133" fill="none" stroke="#fff0bc" stroke-opacity=".62" stroke-width="3" stroke-linecap="round"/>
+    </g>
+    <path d="m249 211 50 31-50 31z" fill="#11100d" stroke="url(#gold)" stroke-width="5" stroke-linejoin="round"/>
+    <path d="m257 219 30 19" fill="none" stroke="#fff4c8" stroke-opacity=".72" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M188 365h136" stroke="url(#rim)" stroke-opacity=".56" stroke-width="1.5"/>
+    <text x="256" y="422" fill="url(#gold)" font-family="Manrope, Avenir Next, Montserrat, Arial, sans-serif" font-size="54" font-weight="800" letter-spacing="15" text-anchor="middle">ZIVO</text>
+    <path d="M168 441h60m56 0h60" stroke="#d4af5b" stroke-opacity=".56" stroke-width="1.5"/>
+    <circle cx="256" cy="441" r="2.5" fill="#f3dc91"/>
+  </g>
+  <circle cx="256" cy="256" r="239" fill="none" stroke="#fff2c0" stroke-opacity=".22" stroke-width="1.5"/>
+</svg>

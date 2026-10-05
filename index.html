@@ -11,7 +11,7 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="ZIVO — Watch and discover videos" />
     <meta name="twitter:description" content="Watch videos and discover creators on ZIVO." />
-    <meta name="theme-color" content="#ffffff" />
+    <meta name="theme-color" content="#080807" />
     <style>
       body { margin: 0; }
     </style>
@@ -20,6 +20,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <link rel="manifest" href="/manifest.json" />
     <link rel="icon" type="image/svg+xml" href="/icons/zivo-icon-192.svg" />
+    <link rel="apple-touch-icon" href="/icons/zivo-icon-192.svg" />
 
     <title>ZIVO</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -1901,9 +1902,11 @@ window.__genmbBindSdk(window.genmb.storage);
       super()
       this.attachShadow({ mode: 'open' })
       this._upgraded = false
+      this._usingHls = false
+      this._fallbackAttempted = false
     }
 
-    static get observedAttributes() { return ['src', 'poster', 'controls', 'autoplay', 'muted', 'loop'] }
+    static get observedAttributes() { return ['src', 'poster', 'controls', 'autoplay', 'muted', 'loop', 'preload'] }
 
     connectedCallback() {
       this._render()
@@ -1927,6 +1930,8 @@ window.__genmbBindSdk(window.genmb.storage);
       if (this.hasAttribute('muted')) attrs += ' muted'
       if (this.hasAttribute('loop')) attrs += ' loop'
       attrs += ' playsinline'
+      var preload = this.getAttribute('preload')
+      attrs += ' preload="' + (preload === 'none' || preload === 'auto' ? preload : 'metadata') + '"'
 
       this.shadowRoot.innerHTML =
         '<style>' + CSS + '</style>' +
@@ -1940,6 +1945,12 @@ window.__genmbBindSdk(window.genmb.storage);
       video.appendChild(sourceEl)
 
       video.addEventListener('play', function () { track('widget_video_played', { src: src }) }, { once: true })
+      video.setAttribute('fetchpriority', 'high')
+      var self = this
+      video.addEventListener('error', function () {
+        if (self._usingHls) self._fallbackToProgressive()
+        else self.dispatchEvent(new CustomEvent('genmb-video-error', { detail: { source: src } }))
+      })
 
       this._video = video
       this._paths = paths
@@ -1986,6 +1997,7 @@ window.__genmbBindSdk(window.genmb.storage);
       var currentTime = video.currentTime || 0
 
       if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        this._usingHls = true
         video.src = masterUrl
         video.addEventListener('loadedmetadata', function () {
           video.currentTime = currentTime
@@ -2000,8 +2012,14 @@ window.__genmbBindSdk(window.genmb.storage);
       var self = this
       loadHls().then(function (Hls) {
         if (Hls && Hls.isSupported && Hls.isSupported()) {
-          var hls = new Hls()
+          var hls = new Hls({
+            capLevelToPlayerSize: true,
+            maxBufferLength: 30,
+            maxMaxBufferLength: 60,
+            backBufferLength: 30,
+          })
           self._hls = hls
+          self._usingHls = true
           hls.loadSource(masterUrl)
           hls.attachMedia(video)
           hls.on(Hls.Events.MANIFEST_PARSED, function () {
@@ -2010,6 +2028,9 @@ window.__genmbBindSdk(window.genmb.storage);
             badge.textContent = 'Optimized'
             badge.classList.add('show')
             setTimeout(function () { badge.classList.remove('show') }, 2500)
+          })
+          hls.on(Hls.Events.ERROR, function (_event, data) {
+            if (data && data.fatal) self._fallbackToProgressive()
           })
         }
       }).catch(function () {
@@ -2024,6 +2045,25 @@ window.__genmbBindSdk(window.genmb.storage);
         trackEl.default = true
         video.appendChild(trackEl)
       }
+    }
+
+    _fallbackToProgressive() {
+      if (this._fallbackAttempted || !this._paths || !this._video) return
+      this._fallbackAttempted = true
+      this._usingHls = false
+      var video = this._video
+      var currentTime = video.currentTime || 0
+      var wasPlaying = !video.paused && !video.ended
+      if (this._hls) {
+        this._hls.destroy()
+        this._hls = null
+      }
+      video.src = this._paths.src
+      video.addEventListener('loadedmetadata', function () {
+        if (currentTime > 0 && Number.isFinite(currentTime)) video.currentTime = currentTime
+        if (wasPlaying) video.play().catch(function () {})
+      }, { once: true })
+      video.load()
     }
 
     _escape(s) {
@@ -3174,6 +3214,9 @@ window.__genmbBindSdk(window.genmb.rbac);
     <!-- GenMB Capabilities END -->
   </head>
   <body>
+    <div aria-label="ZIVO is loading" id="app-splash" role="status">
+      <img alt="" height="220" src="/icons/zivo-icon-512.svg" width="220" />
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
