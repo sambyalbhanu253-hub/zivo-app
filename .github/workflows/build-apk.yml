@@ -2,44 +2,45 @@ name: Build Android APK
 
 on:
   push:
+    branches: [ "main" ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        distribution: 'temurin'
-        java-version: '17'
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
 
-    - name: Set up Android SDK
-      uses: android-actions/setup-android@v3
-      with:
-        packages: 'platform-tools platforms;android-36 build-tools;35.0.0'
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-36 build-tools;35.0.0'
 
-    - name: Install Node.js Dependencies
-      run: npm ci
+      - name: Install Node.js Dependencies
+        run: npm ci
 
-    - name: Build Web Assets
-      run: npm run build
+      - name: Build Web Assets
+        run: npm run build
 
-    - name: Sync Capacitor Android
-      run: npx cap sync android
+      - name: Sync Capacitor Android
+        run: npx cap sync android
 
-    - name: Grant execute permission for gradlew
-      run: chmod +x android/gradlew
+      - name: Grant execute permission for gradlew
+        run: chmod +x android/gradlew
 
-    - name: Build Debug APK
-      working-directory: android
-      run: ./gradlew assembleDebug
+      - name: Build Debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug
 
-    - name: Upload APK Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: debug-apk
-        path: android/app/build/outputs/apk/debug/app-debug.apk
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
