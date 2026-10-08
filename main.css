@@ -60,11 +60,11 @@
     color-mix(in oklab, var(--story-cyan) 42%, var(--muted)),
     color-mix(in oklab, var(--story-violet) 42%, var(--muted))
   );
-  --zivo-radius-sm: 0.75rem;
-  --zivo-radius-md: 1rem;
-  --zivo-radius-lg: 1.25rem;
-  --zivo-radius-xl: 1.65rem;
-  --zivo-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --pulse-radius-sm: 0.75rem;
+  --pulse-radius-md: 1rem;
+  --pulse-radius-lg: 1.25rem;
+  --pulse-radius-xl: 1.65rem;
+  --pulse-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 * {
@@ -144,7 +144,7 @@ button:not(:disabled):active {
 .home-pull-content { position: relative; transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1); }
 .home-pull-content.is-pulling { transition: none; }
 .home-pull-indicator { pointer-events: none; }
-.home-frame .zivo-glass-panel {
+.home-frame .pulse-glass-panel {
   background: var(--card);
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
@@ -173,32 +173,32 @@ button:not(:disabled):active {
 .create-page-content {
   padding-bottom: calc(env(safe-area-inset-bottom) + 9rem);
 }
-.zivo-screen {
-  animation: zivo-screen-in 240ms var(--zivo-ease) both;
+.pulse-screen {
+  animation: pulse-screen-in 240ms var(--pulse-ease) both;
 }
-.zivo-icon-button {
-  border-radius: var(--zivo-radius-md);
+.pulse-icon-button {
+  border-radius: var(--pulse-radius-md);
   transition:
-    transform 180ms var(--zivo-ease),
-    background-color 180ms var(--zivo-ease),
-    border-color 180ms var(--zivo-ease),
-    color 180ms var(--zivo-ease),
-    box-shadow 180ms var(--zivo-ease);
+    transform 180ms var(--pulse-ease),
+    background-color 180ms var(--pulse-ease),
+    border-color 180ms var(--pulse-ease),
+    color 180ms var(--pulse-ease),
+    box-shadow 180ms var(--pulse-ease);
 }
-.zivo-elevated-surface {
+.pulse-elevated-surface {
   box-shadow:
     0 10px 28px var(--shadow-strong),
     inset 0 1px 0 oklch(1 0 0 / 0.035);
 }
-.zivo-scroll-row {
+.pulse-scroll-row {
   overscroll-behavior-x: contain;
   scroll-padding-inline: 1.25rem;
   scrollbar-width: none;
 }
-.zivo-scroll-row::-webkit-scrollbar {
+.pulse-scroll-row::-webkit-scrollbar {
   display: none;
 }
-@keyframes zivo-rise {
+@keyframes pulse-rise {
   from {
     opacity: 0;
     transform: translateY(0.75rem);
@@ -208,7 +208,7 @@ button:not(:disabled):active {
     transform: translateY(0);
   }
 }
-@keyframes zivo-screen-in {
+@keyframes pulse-screen-in {
   from {
     opacity: 0;
     transform: translateY(0.4rem);
@@ -231,15 +231,15 @@ img[data-genmb-img*="avatar"],
   height: 100%;
   border-radius: 50%;
 }
-.zivo-story-ring {
+.pulse-story-ring {
   background: var(--story-gradient);
   box-shadow: 0 0 18px color-mix(in oklab, var(--story-pink) 26%, transparent);
 }
-.zivo-story-ring-seen {
+.pulse-story-ring-seen {
   background: var(--story-gradient-seen);
   box-shadow: none;
 }
-.zivo-glass-panel {
+.pulse-glass-panel {
   border: 1px solid var(--glass-edge);
   background: var(--glass-surface);
   box-shadow:
@@ -249,21 +249,21 @@ img[data-genmb-img*="avatar"],
   -webkit-backdrop-filter: blur(20px) saturate(145%);
   backdrop-filter: blur(20px) saturate(145%);
 }
-.zivo-discover {
+.pulse-discover {
   background: radial-gradient(circle at 85% 4%, var(--glow-primary), transparent 18rem), var(--home-background);
 }
-.zivo-discover-search,
-.zivo-discover-tag {
+.pulse-discover-search,
+.pulse-discover-tag {
   border: 1px solid var(--glass-edge);
   background: linear-gradient(145deg, var(--glass-highlight), transparent 70%), var(--glass-surface);
   box-shadow: inset 0 1px 0 var(--glass-highlight), 0 10px 28px var(--shadow-strong);
   -webkit-backdrop-filter: blur(20px) saturate(145%);
   backdrop-filter: blur(20px) saturate(145%);
 }
-.zivo-discover-category {
+.pulse-discover-category {
   box-shadow: inset 0 1px 0 var(--glass-highlight), 0 8px 20px var(--shadow-strong);
 }
-.zivo-discover-empty {
+.pulse-discover-empty {
   position: relative;
   overflow: hidden;
   padding: 2rem 1.5rem;
@@ -275,12 +275,12 @@ img[data-genmb-img*="avatar"],
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
 }
-.zivo-discover-empty .zivo-state-icon {
+.pulse-discover-empty .pulse-state-icon {
   padding: 0.9rem;
   border-radius: 1rem;
   box-shadow: 0 6px 24px var(--glow-primary);
 }
-.zivo-create-glow {
+.pulse-create-glow {
   isolation: isolate;
   background: linear-gradient(135deg, var(--story-pink) 0%, var(--story-violet) 48%, var(--story-cyan) 100%);
   box-shadow:
@@ -289,7 +289,7 @@ img[data-genmb-img*="avatar"],
     0 0 32px color-mix(in oklab, var(--story-violet) 45%, transparent),
     0 8px 20px var(--shadow-strong);
 }
-.zivo-create-glow::before {
+.pulse-create-glow::before {
   content: "";
   position: absolute;
   inset: -0.35rem;
@@ -300,10 +300,10 @@ img[data-genmb-img*="avatar"],
   filter: blur(12px);
   pointer-events: none;
 }
-.zivo-feed-card {
-  animation: zivo-rise 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+.pulse-feed-card {
+  animation: pulse-rise 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
-.zivo-post-float {
+.pulse-post-float {
   position: relative;
   isolation: isolate;
   border: 1px solid var(--glass-edge);
@@ -315,81 +315,81 @@ img[data-genmb-img*="avatar"],
     0 3px 32px var(--glass-shadow);
   /* Feed cards are opaque on mobile, avoiding a blur pass for every card during scroll. */
 }
-.zivo-post-follow,
-.zivo-post-action,
-.zivo-post-share button {
+.pulse-post-follow,
+.pulse-post-action,
+.pulse-post-share button {
   transition:
-    transform 200ms var(--zivo-ease),
-    background-color 200ms var(--zivo-ease),
-    color 200ms var(--zivo-ease),
-    border-color 200ms var(--zivo-ease),
-    box-shadow 200ms var(--zivo-ease);
+    transform 200ms var(--pulse-ease),
+    background-color 200ms var(--pulse-ease),
+    color 200ms var(--pulse-ease),
+    border-color 200ms var(--pulse-ease),
+    box-shadow 200ms var(--pulse-ease);
 }
-.zivo-post-follow:not(:disabled):active,
-.zivo-post-action:not(:disabled):active,
-.zivo-post-share button:not(:disabled):active {
+.pulse-post-follow:not(:disabled):active,
+.pulse-post-action:not(:disabled):active,
+.pulse-post-share button:not(:disabled):active {
   transform: scale(0.92);
 }
 @media (hover: hover) {
-  .zivo-post-follow:not(:disabled):hover {
+  .pulse-post-follow:not(:disabled):hover {
     transform: translateY(-2px);
     box-shadow:
       0 8px 18px var(--glass-shadow),
       0 5px 12px var(--shadow-strong);
   }
-  .zivo-post-action:not(:disabled):hover,
-  .zivo-post-share button:not(:disabled):hover {
+  .pulse-post-action:not(:disabled):hover,
+  .pulse-post-share button:not(:disabled):hover {
     transform: translateY(-2px);
     background: var(--glass-highlight);
   }
 }
-.zivo-post-action:not(:disabled):active,
-.zivo-post-share button:not(:disabled):active {
+.pulse-post-action:not(:disabled):active,
+.pulse-post-share button:not(:disabled):active {
   background: var(--accent);
 }
-.zivo-media-overlay,
-.zivo-story-viewer {
+.pulse-media-overlay,
+.pulse-story-viewer {
   color-scheme: dark;
   --background: oklch(0.13 0.018 275);
   --foreground: oklch(0.97 0.01 285);
   --card: oklch(0.19 0.024 278);
   --card-foreground: oklch(0.975 0.008 285);
 }
-.zivo-shorts-caption-shade {
+.pulse-shorts-caption-shade {
   background: linear-gradient(to top, var(--background) 0%, color-mix(in oklab, var(--background) 96%, transparent) 17%, color-mix(in oklab, var(--background) 77%, transparent) 42%, color-mix(in oklab, var(--background) 38%, transparent) 72%, transparent 100%);
 }
-.zivo-shorts-actions button {
-  transition: transform 220ms var(--zivo-ease), background-color 220ms var(--zivo-ease), border-color 220ms var(--zivo-ease), box-shadow 220ms var(--zivo-ease);
+.pulse-shorts-actions button {
+  transition: transform 220ms var(--pulse-ease), background-color 220ms var(--pulse-ease), border-color 220ms var(--pulse-ease), box-shadow 220ms var(--pulse-ease);
 }
-.zivo-shorts-actions button:not(:disabled):active {
+.pulse-shorts-actions button:not(:disabled):active {
   transform: scale(0.86);
   box-shadow: 0 0 20px var(--glow-primary);
 }
 @media (hover: hover) {
-  .zivo-shorts-actions button:not(:disabled):hover {
+  .pulse-shorts-actions button:not(:disabled):hover {
     transform: translateY(-2px) scale(1.06);
     box-shadow: 0 8px 22px var(--shadow-strong), 0 0 16px var(--glow-primary);
   }
 }
-.zivo-shorts-progress {
+.pulse-shorts-progress {
   background: color-mix(in oklab, var(--foreground) 25%, transparent);
   box-shadow: 0 0 8px var(--shadow-strong);
 }
-.zivo-shorts-progress-fill {
+.pulse-shorts-progress-fill {
   background: linear-gradient(90deg, var(--story-violet), var(--story-pink) 55%, var(--story-cyan));
   box-shadow: 0 0 8px var(--story-pink), 0 0 16px var(--glow-primary);
   transition: width 160ms linear;
 }
-.zivo-feed-card:nth-of-type(2) {
+.pulse-feed-card:nth-of-type(2) {
   animation-delay: 65ms;
 }
-.zivo-feed-card:nth-of-type(3) {
+.pulse-feed-card:nth-of-type(3) {
   animation-delay: 120ms;
 }
-.zivo-loader {
+.pulse-loader {
   display: inline-flex;
   color: var(--primary);
-  animation: zivo-loader-spin 900ms linear infinite;
+  animation: pulse-loader-spin 900ms linear infinite;
 }
 video:fullscreen,
 video:-webkit-full-screen {
@@ -400,15 +400,15 @@ video:-webkit-full-screen {
   background: var(--video-background);
 }
 /* The in-app WebView fallback must escape animated and clipped feed/page wrappers. */
-:where(.app-frame, .page-content, .zivo-screen, .zivo-feed-card, article, .zivo-post-float):has(.zivo-long-player-fallback) {
+:where(.app-frame, .page-content, .pulse-screen, .pulse-feed-card, article, .pulse-post-float):has(.pulse-long-player-fallback) {
   overflow: visible;
   transform: none;
   filter: none;
   contain: none;
 }
-.zivo-long-player:fullscreen,
-.zivo-long-player:-webkit-full-screen,
-.zivo-long-player-fallback {
+.pulse-long-player:fullscreen,
+.pulse-long-player:-webkit-full-screen,
+.pulse-long-player-fallback {
   position: fixed;
   inset: 0;
   z-index: 2147483647;
@@ -426,9 +426,9 @@ video:-webkit-full-screen {
   box-shadow: none;
   background: var(--video-background);
 }
-.zivo-long-player:fullscreen video,
-.zivo-long-player:-webkit-full-screen video,
-.zivo-long-player-fallback video {
+.pulse-long-player:fullscreen video,
+.pulse-long-player:-webkit-full-screen video,
+.pulse-long-player-fallback video {
   display: block;
   width: 100vw;
   height: 100vh;
@@ -437,14 +437,14 @@ video:-webkit-full-screen {
   max-height: none;
   object-fit: contain;
 }
-.zivo-loader-lg {
+.pulse-loader-lg {
   padding: 0.75rem;
   border: 1px solid color-mix(in oklab, var(--primary) 32%, var(--border));
   border-radius: 1rem;
   background: color-mix(in oklab, var(--accent) 72%, transparent);
   box-shadow: 0 10px 28px var(--shadow-strong);
 }
-.zivo-loading-state {
+.pulse-loading-state {
   display: flex;
   min-height: 8rem;
   flex-direction: column;
@@ -452,19 +452,19 @@ video:-webkit-full-screen {
   justify-content: center;
   gap: 0.75rem;
   border: 1px solid color-mix(in oklab, var(--border) 82%, transparent);
-  border-radius: var(--zivo-radius-lg);
+  border-radius: var(--pulse-radius-lg);
   background: color-mix(in oklab, var(--card) 82%, transparent);
   box-shadow: 0 10px 28px var(--shadow-strong);
 }
-.zivo-state-panel {
+.pulse-state-panel {
   border: 1px solid color-mix(in oklab, var(--border) 88%, transparent);
-  border-radius: var(--zivo-radius-lg);
+  border-radius: var(--pulse-radius-lg);
   padding: 1.25rem;
   text-align: center;
   background: color-mix(in oklab, var(--card) 92%, transparent);
   box-shadow: 0 10px 28px var(--shadow-strong);
 }
-.zivo-state-icon {
+.pulse-state-icon {
   display: inline-flex;
   margin-bottom: 0.25rem;
   padding: 0.65rem;
@@ -480,7 +480,7 @@ video:-webkit-full-screen {
 [role="dialog"][aria-label$="'s story"] .absolute.inset-x-0.bottom-0.z-20 a {
   pointer-events: auto;
 }
-@keyframes zivo-loader-spin {
+@keyframes pulse-loader-spin {
   to {
     transform: rotate(360deg);
   }

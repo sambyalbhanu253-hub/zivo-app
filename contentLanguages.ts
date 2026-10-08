@@ -1,8 +1,8 @@
 import { loadPost } from './posts'
 
-export type ZivoLanguage = { code: string; label: string }
+export type PulseLanguage = { code: string; label: string }
 
-export const zivoLanguages: ZivoLanguage[] = [
+export const pulseLanguages: PulseLanguage[] = [
   { code: 'en', label: 'English' },
   { code: 'hi', label: 'Hindi' },
   { code: 'pa', label: 'Punjabi' },
@@ -16,42 +16,42 @@ export const zivoLanguages: ZivoLanguage[] = [
   { code: 'ur', label: 'Urdu' },
 ]
 
-export type ZivoTimedCaption = { startMs: number; endMs: number; text: string }
-export type ZivoContentTranslation = {
+export type PulseTimedCaption = { startMs: number; endMs: number; text: string }
+export type PulseContentTranslation = {
   languageCode: string
   title: string
   description: string
   caption: string
-  timedCaptions?: ZivoTimedCaption[]
+  timedCaptions?: PulseTimedCaption[]
   status: 'translated'
   createdAt: number
 }
-export type ZivoDubbingVersion = {
+export type PulseDubbingVersion = {
   targetLanguageCode: string
   status: 'unavailable' | 'processing' | 'ready' | 'failed'
   mediaRef?: string
   provider?: string
   updatedAt: number
 }
-export type ZivoContentLanguageSettings = {
+export type PulseContentLanguageSettings = {
   version: 1
   contentId: string
   creatorId: string
   originalLanguageCode: string
   originalAudioLanguageCode?: string
-  translations: ZivoContentTranslation[]
-  dubbingVersions: ZivoDubbingVersion[]
+  translations: PulseContentTranslation[]
+  dubbingVersions: PulseDubbingVersion[]
   updatedAt: number
 }
 
-export const contentLanguageKey = (contentId: string) => `zivo:content-language:${contentId}`
+export const contentLanguageKey = (contentId: string) => `pulse:content-language:${contentId}`
 
-const knownCodes = new Set(zivoLanguages.map((language) => language.code))
-export const languageLabel = (code: string) => zivoLanguages.find((language) => language.code === code)?.label || code
+const knownCodes = new Set(pulseLanguages.map((language) => language.code))
+export const languageLabel = (code: string) => pulseLanguages.find((language) => language.code === code)?.label || code
 export const isSupportedLanguageCode = (code: string) => knownCodes.has(code)
 
 function readText(value: unknown) { return typeof value === 'string' ? value : '' }
-function readTimedCaptions(value: unknown): ZivoTimedCaption[] | undefined {
+function readTimedCaptions(value: unknown): PulseTimedCaption[] | undefined {
   if (!Array.isArray(value)) return undefined
   const cues = value.flatMap((item) => {
     if (!item || typeof item !== 'object' || Array.isArray(item)) return []
@@ -62,7 +62,7 @@ function readTimedCaptions(value: unknown): ZivoTimedCaption[] | undefined {
   return cues.length ? cues : undefined
 }
 
-export function readContentLanguageSettings(value: unknown): ZivoContentLanguageSettings | null {
+export function readContentLanguageSettings(value: unknown): PulseContentLanguageSettings | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null
   const source = value as Record<string, unknown>
   if (source.version !== 1 || typeof source.contentId !== 'string' || typeof source.creatorId !== 'string' || !isSupportedLanguageCode(readText(source.originalLanguageCode)) || typeof source.updatedAt !== 'number') return null
@@ -79,12 +79,12 @@ export function readContentLanguageSettings(value: unknown): ZivoContentLanguage
     if (!isSupportedLanguageCode(readText(dubbing.targetLanguageCode)) || !['unavailable', 'processing', 'ready', 'failed'].includes(String(status)) || typeof dubbing.updatedAt !== 'number') return []
     const mediaRef = readText(dubbing.mediaRef).trim() || undefined
     if (status === 'ready' && !mediaRef) return []
-    return [{ targetLanguageCode: readText(dubbing.targetLanguageCode), status: status as ZivoDubbingVersion['status'], mediaRef, provider: readText(dubbing.provider).trim() || undefined, updatedAt: dubbing.updatedAt }]
+    return [{ targetLanguageCode: readText(dubbing.targetLanguageCode), status: status as PulseDubbingVersion['status'], mediaRef, provider: readText(dubbing.provider).trim() || undefined, updatedAt: dubbing.updatedAt }]
   }) : []
   return { version: 1, contentId: source.contentId, creatorId: source.creatorId, originalLanguageCode: readText(source.originalLanguageCode), originalAudioLanguageCode: isSupportedLanguageCode(readText(source.originalAudioLanguageCode)) ? readText(source.originalAudioLanguageCode) : undefined, translations, dubbingVersions, updatedAt: source.updatedAt }
 }
 
-export function defaultContentLanguageSettings(contentId: string, creatorId: string, originalLanguageCode = 'en'): ZivoContentLanguageSettings {
+export function defaultContentLanguageSettings(contentId: string, creatorId: string, originalLanguageCode = 'en'): PulseContentLanguageSettings {
   return { version: 1, contentId, creatorId, originalLanguageCode: isSupportedLanguageCode(originalLanguageCode) ? originalLanguageCode : 'en', originalAudioLanguageCode: undefined, translations: [], dubbingVersions: [], updatedAt: Date.now() }
 }
 
@@ -94,7 +94,7 @@ export async function loadContentLanguageSettings(contentId: string, creatorId?:
   return creatorId ? defaultContentLanguageSettings(contentId, creatorId) : null
 }
 
-export async function saveContentLanguageSettings(settings: ZivoContentLanguageSettings) {
+export async function saveContentLanguageSettings(settings: PulseContentLanguageSettings) {
   await window.genmb.auth.ready()
   const user = window.genmb.auth.getUser()
   if (!user || user.id !== settings.creatorId) throw new Error('Sign in as the creator to update language versions.')

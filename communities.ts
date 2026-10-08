@@ -1,4 +1,4 @@
-export type ZivoCommunity = {
+export type PulseCommunity = {
   id: string
   slug: string
   name: string
@@ -8,14 +8,14 @@ export type ZivoCommunity = {
   avatarUrl?: string
 }
 
-export type ZivoCommunityMembership = {
+export type PulseCommunityMembership = {
   communitySlug: string
   userId: string
   joinedAt: number
 }
 
-export const communityPrefix = 'zivo:community:'
-export const communityMembershipPrefix = 'zivo:community-member:'
+export const communityPrefix = 'pulse:community:'
+export const communityMembershipPrefix = 'pulse:community-member:'
 
 export function normalizeCommunitySlug(value: string) {
   return value
@@ -38,7 +38,7 @@ export function membershipKey(slug: string, userId: string) {
   return `${communityMembershipPrefix}${normalizeCommunitySlug(slug)}:${userId}`
 }
 
-export function readCommunity(value: unknown): ZivoCommunity | null {
+export function readCommunity(value: unknown): PulseCommunity | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null
   const record = value as Record<string, unknown>
   if (
@@ -66,7 +66,7 @@ export function readCommunity(value: unknown): ZivoCommunity | null {
   }
 }
 
-export function readCommunityMembership(value: unknown): ZivoCommunityMembership | null {
+export function readCommunityMembership(value: unknown): PulseCommunityMembership | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null
   const record = value as Record<string, unknown>
   if (typeof record.communitySlug !== 'string' || typeof record.userId !== 'string' || typeof record.joinedAt !== 'number') return null
@@ -79,7 +79,7 @@ export async function loadCommunities() {
   const result = await window.genmb.kv.list(communityPrefix)
   return result.data
     .map((entry) => readCommunity(entry.value))
-    .filter((community): community is ZivoCommunity => Boolean(community))
+    .filter((community): community is PulseCommunity => Boolean(community))
     .sort((a, b) => b.createdAt - a.createdAt)
 }
 
@@ -93,7 +93,7 @@ export async function loadCommunityMemberships(slug: string) {
   const normalizedSlug = normalizeCommunitySlug(slug)
   if (!isValidCommunitySlug(normalizedSlug)) return []
   const result = await window.genmb.kv.list(`${communityMembershipPrefix}${normalizedSlug}:`)
-  const members = new Map<string, ZivoCommunityMembership>()
+  const members = new Map<string, PulseCommunityMembership>()
   result.data.map((entry) => readCommunityMembership(entry.value)).forEach((membership) => {
     if (membership && membership.communitySlug === normalizedSlug) members.set(membership.userId, membership)
   })
@@ -112,7 +112,7 @@ export async function createCommunity(input: { name: string; slug: string; descr
   const key = communityKey(slug)
   if (await window.genmb.kv.get(key)) throw new Error('That community identifier is already in use.')
 
-  const community: ZivoCommunity = {
+  const community: PulseCommunity = {
     id: slug,
     slug,
     name,
@@ -122,7 +122,7 @@ export async function createCommunity(input: { name: string; slug: string; descr
     avatarUrl: input.avatarUrl?.trim() || undefined,
   }
   await window.genmb.kv.set(key, community)
-  await window.genmb.kv.set(membershipKey(slug, input.ownerId), { communitySlug: slug, userId: input.ownerId, joinedAt: community.createdAt } satisfies ZivoCommunityMembership)
+  await window.genmb.kv.set(membershipKey(slug, input.ownerId), { communitySlug: slug, userId: input.ownerId, joinedAt: community.createdAt } satisfies PulseCommunityMembership)
   return community
 }
 
@@ -135,7 +135,7 @@ export async function joinCommunity(slug: string, userId: string) {
   const membership = readCommunityMembership(existing)
   if (membership && membership.userId === userId && membership.communitySlug === community.slug) return { joined: false, community }
   if (existing) throw new Error('This membership record is invalid and cannot be replaced automatically.')
-  await window.genmb.kv.set(key, { communitySlug: community.slug, userId, joinedAt: Date.now() } satisfies ZivoCommunityMembership)
+  await window.genmb.kv.set(key, { communitySlug: community.slug, userId, joinedAt: Date.now() } satisfies PulseCommunityMembership)
   return { joined: true, community }
 }
 

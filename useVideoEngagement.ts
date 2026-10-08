@@ -26,7 +26,7 @@ type SaveToggleResult = {
 }
 
 export function savePrefix(userId: string) {
-  return `zivo:save:${userId}:`
+  return `pulse:save:${userId}:`
 }
 
 export function saveKey(userId: string, contentType: SavedContentType, contentId: string) {

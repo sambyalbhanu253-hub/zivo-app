@@ -1,4 +1,4 @@
-import { communityPrefix, readCommunity, type ZivoCommunity } from './communities'
+import { communityPrefix, readCommunity, type PulseCommunity } from './communities'
 import { postPrefix, readStoredPost, type StoredPost } from './posts'
 import { profilePrefix, readStoredProfile, type StoredProfile } from './profiles'
 
@@ -6,10 +6,10 @@ export type SearchCreatorResult = StoredProfile & {
   userId: string
 }
 
-export type ZivoSearchResults = {
+export type PulseSearchResults = {
   content: StoredPost[]
   creators: SearchCreatorResult[]
-  communities: ZivoCommunity[]
+  communities: PulseCommunity[]
 }
 
 function normalizedSearchTerm(value: string) {
@@ -35,7 +35,7 @@ function uniqueById<T extends { id: string }>(items: T[]) {
  * KV exposes prefix scans rather than a text-query API, so the query is filtered
  * in memory after reading the three relevant, persisted collections in parallel.
  */
-export async function searchPersistedZivoData(searchTerm: string): Promise<ZivoSearchResults> {
+export async function searchPersistedPulseData(searchTerm: string): Promise<PulseSearchResults> {
   const query = normalizedSearchTerm(searchTerm)
   if (!query) return { content: [], creators: [], communities: [] }
 
@@ -76,7 +76,7 @@ export async function searchPersistedZivoData(searchTerm: string): Promise<ZivoS
   const communities = uniqueById(
     communityRecords.data
       .map((entry) => readCommunity(entry.value))
-      .filter((community): community is ZivoCommunity => Boolean(community))
+      .filter((community): community is PulseCommunity => Boolean(community))
       .filter((community) => matchesSearch(`${community.name} ${community.slug} ${community.description}`, query))
       .sort((first, second) => second.createdAt - first.createdAt),
   )

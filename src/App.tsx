@@ -6,15 +6,15 @@ import HomePage from './pages/HomePage'
 import MessagesPage from './pages/MessagesPage'
 import NotFoundPage from './pages/NotFoundPage'
 import ProfilePage from './pages/ProfilePage'
+import ProfileSectionPage from './pages/ProfileSectionPage'
 import ShortsPage from './pages/ShortsPage'
 import SubscriptionsPage from './pages/SubscriptionsPage'
-import AuthPage from './pages/AuthPage'
 
 export default function App() {
   return (
     <Routes>
-      <Route path="sign-in" element={<AuthPage initialMode="sign-in" />} />
-      <Route path="sign-up" element={<AuthPage initialMode="sign-up" />} />
+      <Route path="sign-in" element={<Navigate to="/" replace />} />
+      <Route path="sign-up" element={<Navigate to="/" replace />} />
       <Route element={<AppShell />}>
         <Route index element={<HomePage />} />
         <Route path="shorts" element={<ShortsPage />} />
@@ -23,6 +23,7 @@ export default function App() {
         <Route path="subscriptions" element={<SubscriptionsPage />} />
         <Route path="messages" element={<MessagesPage />} />
         <Route path="profile" element={<ProfilePage />} />
+        <Route path="profile/:section" element={<ProfileSectionPage />} />
         <Route path="home" element={<Navigate to="/" replace />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>

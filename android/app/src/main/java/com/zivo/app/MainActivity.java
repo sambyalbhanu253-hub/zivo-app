@@ -1,4 +1,4 @@
-package com.zivo.app;
+package com.pulse.app;
 
 import com.getcapacitor.BridgeActivity;
 

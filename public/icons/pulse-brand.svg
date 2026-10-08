@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 190 48" fill="none">
+  <defs>
+    <linearGradient id="pulse-gradient" x1="10" y1="24" x2="44" y2="24" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F3E7C4"/>
+      <stop offset=".55" stop-color="#D4AF37"/>
+      <stop offset="1" stop-color="#EC4899"/>
+    </linearGradient>
+    <linearGradient id="wordmark-gradient" x1="53" y1="0" x2="174" y2="48" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F3E7C4"/>
+      <stop offset=".48" stop-color="#D4AF37"/>
+      <stop offset="1" stop-color="#EC4899"/>
+    </linearGradient>
+    <filter id="pulse-glow" x="0" y="0" width="52" height="48" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="2"/>
+    </filter>
+  </defs>
+  <path d="M13 39V8h13c8 0 12 3 12 8s-4 8-12 8H13" stroke="url(#pulse-gradient)" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2"/>
+  <path d="M13 25h6l3-4 4 10 5-16 4 10h5" stroke="url(#pulse-gradient)" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"/>
+  <path d="M13 25h6l3-4 4 10 5-16 4 10h5" stroke="url(#pulse-gradient)" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" opacity=".72" filter="url(#pulse-glow)"/>
+  <text x="53" y="34" fill="url(#wordmark-gradient)" font-family="Manrope, Arial, sans-serif" font-size="28" font-weight="800" letter-spacing="3.2">PULSE</text>
+</svg>

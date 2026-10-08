@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Icon from '../components/Icon'
+import { loadLocalPosts, releaseLocalPostUrls, type LocalPost } from '../lib/localPosts'
 
-const POST_PREFIX = 'zivo:post:'
+const POST_PREFIX = 'pulse:post:'
 const ACTIVE_VISIBILITY_THRESHOLD = 0.65
 
 type ShortVideo = {
@@ -13,7 +15,42 @@ type ShortVideo = {
   handle: string
   likes: number
   createdAt: number
+  trimStart?: number
+  trimEnd?: number
 }
+
+const sampleShorts: ShortVideo[] = [
+  {
+    id: 'sample-short-1',
+    source: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+    poster: 'https://images.unsplash.com/photo-1571934811356-5cc061b6821f?auto=format&fit=crop&w=960&q=85',
+    caption: 'A little moment of joy.',
+    creator: 'Nisha Cooks',
+    handle: 'nishacooks',
+    likes: 1240,
+    createdAt: Date.now(),
+  },
+  {
+    id: 'sample-short-2',
+    source: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+    poster: 'https://images.unsplash.com/photo-1519608487953-e999c86e7455?auto=format&fit=crop&w=960&q=85',
+    caption: 'The city after dark.',
+    creator: 'Frames by Dev',
+    handle: 'framesbydev',
+    likes: 890,
+    createdAt: Date.now() - 3_600_000,
+  },
+  {
+    id: 'sample-short-3',
+    source: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+    poster: 'https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=960&q=85',
+    caption: 'Take the scenic route.',
+    creator: 'Aarav on the Move',
+    handle: 'aaravonthemove',
+    likes: 2100,
+    createdAt: Date.now() - 7_200_000,
+  },
+]
 
 type KeyValueEntry = {
   key: string
@@ -40,7 +77,9 @@ function readShort(entry: KeyValueEntry): ShortVideo | null {
   const source = firstString(record, 'videoSource', 'videoUrl', 'videoURL', 'mediaUrl', 'url') ||
     firstString(media, 'url', 'videoUrl', 'src') ||
     firstString(video, 'url', 'src')
-  const format = firstString(record, 'format', 'contentType', 'type').toLowerCase()
+  const format = firstString(record, 'format', 'contentType').toLowerCase()
+  const contentType = firstString(record, 'contentType').toLowerCase()
+  const declaredType = firstString(record, 'type').toLowerCase()
   const status = firstString(record, 'status', 'visibility').toLowerCase()
   const isPrivateDraft =
     record.isDraft === true ||
@@ -48,9 +87,15 @@ function readShort(entry: KeyValueEntry): ShortVideo | null {
     status === 'draft' ||
     status === 'private' ||
     status === 'unpublished'
-  const isShort = record.isShort === true || format === 'short' || (record.isLongVideo !== true && Boolean(source))
+  const isShort = record.isShort === true || format === 'short' || contentType === 'short' ||
+    declaredType === 'short' ||
+    (!format && !contentType && !declaredType && record.isLongVideo !== true && Boolean(source))
 
-  if (!source || !isShort || isPrivateDraft || record.isLongVideo === true || format === 'long') return null
+  if (
+    !source || !isShort || isPrivateDraft || contentType === 'image' ||
+    record.isLongVideo === true || format === 'long' || format === 'video' ||
+    declaredType === 'video'
+  ) return null
 
   const creatorProfile = isRecord(record.creatorProfile) ? record.creatorProfile : {}
   const likesValue = record.likesCount ?? record.likes
@@ -67,15 +112,21 @@ function readShort(entry: KeyValueEntry): ShortVideo | null {
     poster: firstString(record, 'thumbnailUrl', 'thumbnail', 'posterUrl', 'poster') ||
       firstString(media, 'thumbnailUrl', 'poster') ||
       undefined,
-    caption: firstString(record, 'caption', 'description') || 'A moment shared on ZIVO.',
+    caption: firstString(record, 'caption', 'description') || 'A moment shared on PULSE.',
     creator: firstString(record, 'creatorName', 'displayName') ||
       firstString(creatorProfile, 'displayName', 'name') ||
-      'ZIVO creator',
+      'PULSE creator',
     handle: firstString(record, 'creatorHandle', 'username') ||
       firstString(creatorProfile, 'username', 'handle') ||
       'creator',
     likes: typeof likesValue === 'number' ? likesValue : 0,
     createdAt: Number.isFinite(createdAt) ? createdAt : 0,
+    trimStart: typeof record.trimStart === 'number' && Number.isFinite(record.trimStart)
+      ? Math.max(0, record.trimStart)
+      : undefined,
+    trimEnd: typeof record.trimEnd === 'number' && Number.isFinite(record.trimEnd)
+      ? record.trimEnd
+      : undefined,
   }
 }
 
@@ -94,19 +145,32 @@ function readShortFeed(value: unknown): ShortVideo[] {
   return [...unique.values()].sort((a, b) => b.createdAt - a.createdAt)
 }
 
+function parseShortFeedResponse(value: unknown): unknown | null {
+  if (typeof value !== 'string') return value
+
+  const responseText = value.trim()
+  if (!responseText || (responseText[0] !== '{' && responseText[0] !== '[')) return null
+
+  try {
+    return JSON.parse(responseText) as unknown
+  } catch {
+    return null
+  }
+}
+
 export default function ShortsPage() {
+  const navigate = useNavigate()
   const feedRef = useRef<HTMLDivElement>(null)
   const videosRef = useRef(new Map<string, HTMLVideoElement>())
   const visibilityRef = useRef(new Map<string, number>())
   const activeIdRef = useRef<string | null>(null)
-  const soundEnabledRef = useRef(false)
-  const [shorts, setShorts] = useState<ShortVideo[]>([])
+  const soundEnabledRef = useRef(true)
+  const localPostsRef = useRef<LocalPost[]>([])
+  const [shorts, setShorts] = useState<ShortVideo[]>(sampleShorts)
   const [activeId, setActiveId] = useState<string | null>(null)
-  const [soundEnabled, setSoundEnabled] = useState(false)
+  const [soundEnabled, setSoundEnabled] = useState(true)
   const [paused, setPaused] = useState(false)
   const [likedIds, setLikedIds] = useState<Set<string>>(() => new Set())
-  const [loadState, setLoadState] = useState<'loading' | 'ready' | 'error'>('loading')
-  const [loadError, setLoadError] = useState('')
   const [playbackError, setPlaybackError] = useState('')
 
   const pauseAllExcept = useCallback((playingId: string | null) => {
@@ -117,35 +181,50 @@ export default function ShortsPage() {
     })
   }, [])
 
-  const loadFeed = useCallback(async () => {
-    setLoadState('loading')
-    setLoadError('')
-
+  const loadFeed = useCallback(async (isActive: () => boolean) => {
     const store = window.genmb?.kv
-    if (!store) {
-      setLoadState('error')
-      setLoadError('The ZIVO content service is not available.')
+    let cloudEntries: unknown[] = []
+    try {
+      if (store) {
+        const response = parseShortFeedResponse(await store.list(POST_PREFIX))
+        if (isRecord(response) && Array.isArray(response.data)) cloudEntries = response.data
+      }
+    } catch {
+      cloudEntries = []
+    }
+    let localPosts: LocalPost[] = []
+    try {
+      localPosts = await loadLocalPosts((post) => post.visibility === 'public' && post.type === 'short')
+    } catch {
+      localPosts = []
+    }
+    if (!isActive()) {
+      releaseLocalPostUrls(localPosts)
       return
     }
-
-    try {
-      const response = await store.list(POST_PREFIX)
-      const items = readShortFeed(response)
-      setShorts(items)
-      setLoadState('ready')
-    } catch (error) {
-      setLoadState('error')
-      setLoadError(error instanceof Error ? error.message : 'Short videos could not be loaded.')
-    }
+    releaseLocalPostUrls(localPostsRef.current)
+    localPostsRef.current = localPosts
+    const localEntries = localPosts.map((post) => ({
+      key: `${POST_PREFIX}${post.id}`,
+      value: post,
+    }))
+    const items = readShortFeed({ data: [...cloudEntries, ...localEntries] })
+    setShorts(items.length > 0 ? items : sampleShorts)
   }, [])
 
   useEffect(() => {
-    void loadFeed()
+    let active = true
+    void loadFeed(() => active)
+    return () => {
+      active = false
+      releaseLocalPostUrls(localPostsRef.current)
+      localPostsRef.current = []
+    }
   }, [loadFeed])
 
   useEffect(() => {
     const root = feedRef.current
-    if (!root || loadState !== 'ready' || shorts.length === 0) return
+    if (!root || shorts.length === 0) return
 
     visibilityRef.current.clear()
     const observer = new IntersectionObserver((entries) => {
@@ -183,7 +262,7 @@ export default function ShortsPage() {
       activeIdRef.current = null
       pauseAllExcept(null)
     }
-  }, [loadState, pauseAllExcept, shorts])
+  }, [pauseAllExcept, shorts])
 
   useEffect(() => {
     activeIdRef.current = activeId
@@ -198,17 +277,21 @@ export default function ShortsPage() {
       }
 
       video.muted = !soundEnabled
-      const playRequest = video.play()
-      void playRequest.catch(async (error: unknown) => {
+      void video.play().catch(async (error: unknown) => {
         if (error instanceof DOMException && error.name === 'AbortError') return
         if (activeIdRef.current !== id || document.hidden || paused) {
           video.muted = true
           video.pause()
           return
         }
+        if (soundEnabledRef.current !== soundEnabled) return
         video.muted = true
         try {
           await video.play()
+          if (soundEnabledRef.current === soundEnabled) {
+            setSoundEnabled(false)
+            soundEnabledRef.current = false
+          }
         } catch {
           if (activeIdRef.current === id && !document.hidden) {
             setPlaybackError('This video could not be played. Try another short.')
@@ -241,14 +324,37 @@ export default function ShortsPage() {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
   }, [pauseAllExcept, paused])
 
-  const toggleSound = () => {
+  const toggleSound = async () => {
     const nextEnabled = !soundEnabledRef.current
     soundEnabledRef.current = nextEnabled
+    setSoundEnabled(nextEnabled)
+    setPlaybackError('')
+
     if (activeIdRef.current) {
       const video = videosRef.current.get(activeIdRef.current)
-      if (video) video.muted = !nextEnabled
+      if (video) {
+        video.muted = !nextEnabled
+        if (nextEnabled) {
+          try {
+            await video.play()
+          } catch {
+            video.muted = true
+            soundEnabledRef.current = false
+            setSoundEnabled(false)
+            setPlaybackError('Sound could not be enabled. Tap to try again.')
+          }
+        }
+      }
     }
-    setSoundEnabled(nextEnabled)
+  }
+
+  const goBack = () => {
+    const historyIndex = window.history.state?.idx
+    if (typeof historyIndex === 'number' && historyIndex > 0) {
+      navigate(-1)
+      return
+    }
+    navigate('/', { replace: true })
   }
 
   const toggleLike = (id: string) => {
@@ -272,43 +378,37 @@ export default function ShortsPage() {
     }
   }
 
-  if (loadState === 'loading') {
-    return <div className="shorts-feed-state" role="status">Loading Shorts…</div>
-  }
-
-  if (loadState === 'error') {
-    return (
-      <div className="shorts-feed-state" role="alert">
-        <p>{loadError}</p>
-        <button className="shorts-retry-button" onClick={() => void loadFeed()} type="button">Try again</button>
-      </div>
-    )
-  }
-
   if (shorts.length === 0) {
     return (
       <div className="shorts-feed-state shorts-empty" role="status">
         <span className="shorts-play-icon"><Icon name="play" size={30} /></span>
-        <p className="eyebrow">ZIVO SHORTS</p>
+        <p className="eyebrow">PULSE SHORTS</p>
         <h1>Big moments.<br /><span className="accent-text">Short stories.</span></h1>
-        <p className="page-description">Short videos from ZIVO creators will appear here.</p>
+        <p className="page-description">Short videos from PULSE creators will appear here.</p>
       </div>
     )
   }
 
   return (
     <div aria-label="Short videos" className="shorts-feed" ref={feedRef}>
+      <button
+        aria-label="Go back"
+        className="shorts-back-button"
+        onClick={goBack}
+        type="button"
+      >
+        <Icon name="back" size={21} />
+        <span>Back</span>
+      </button>
       {shorts.map((short) => {
         const liked = likedIds.has(short.id)
         const isActive = activeId === short.id
-
         return (
           <article className="shorts-slide" data-short-id={short.id} key={short.id}>
             <video
               aria-label={`Short video by ${short.creator}`}
               autoPlay={isActive && !paused}
               className="shorts-video"
-              loop
               muted={!isActive || !soundEnabled}
               playsInline
               poster={short.poster}
@@ -322,6 +422,28 @@ export default function ShortsPage() {
                 }
               }}
               src={short.source}
+              onLoadedMetadata={(event) => {
+                if (short.trimStart && short.trimStart < event.currentTarget.duration) {
+                  event.currentTarget.currentTime = short.trimStart
+                }
+              }}
+              onTimeUpdate={(event) => {
+                const video = event.currentTarget
+                const clipStart = Math.min(short.trimStart ?? 0, video.duration)
+                const clipEnd = Math.min(short.trimEnd ?? video.duration, video.duration)
+                if (clipEnd > clipStart && video.currentTime >= clipEnd) {
+                  video.currentTime = clipStart
+                }
+              }}
+              onEnded={(event) => {
+                const video = event.currentTarget
+                video.currentTime = Math.min(short.trimStart ?? 0, video.duration)
+                if (isActive && !paused) {
+                  void video.play().catch(() => {
+                    setPlaybackError('This video could not be played. Try another short.')
+                  })
+                }
+              }}
               onClick={() => isActive && setPaused((wasPaused) => !wasPaused)}
             />
             <div aria-hidden="true" className="shorts-gradient" />
@@ -351,15 +473,15 @@ export default function ShortsPage() {
                 <span>{short.likes + (liked ? 1 : 0)}</span>
               </button>
               <button
-                aria-label={soundEnabled && isActive ? 'Mute short' : 'Unmute active short'}
+                aria-label={!isActive ? 'Sound controls for active short' : soundEnabled ? 'Mute short' : 'Unmute short'}
                 aria-pressed={soundEnabled && isActive}
-                className="shorts-action-button"
+                className={`shorts-action-button shorts-sound-button${isActive && soundEnabled ? ' is-sound-enabled' : ''}`}
                 disabled={!isActive}
                 onClick={toggleSound}
                 type="button"
               >
                 <Icon name={soundEnabled && isActive ? 'volumeOn' : 'volumeOff'} size={23} />
-                <span>Sound</span>
+                <span>{soundEnabled && isActive ? 'Mute' : 'Unmute'}</span>
               </button>
               <button
                 aria-label="Share short"

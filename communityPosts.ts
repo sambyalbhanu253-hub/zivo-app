@@ -7,29 +7,29 @@ import {
 } from './communities'
 import { profileKey } from './profiles'
 
-export type ZivoCommunityPostMedia = {
+export type PulseCommunityPostMedia = {
   url: string
   contentType: string
   filename?: string
 }
 
-export type ZivoCommunityPost = {
+export type PulseCommunityPost = {
   id: string
   communityId: string
   authorUserId: string
   authorProfileRef: string
   text: string
-  media?: ZivoCommunityPostMedia
+  media?: PulseCommunityPostMedia
   createdAt: number
 }
 
-export const communityPostPrefix = 'zivo:community-post:'
+export const communityPostPrefix = 'pulse:community-post:'
 
 export function communityPostKey(communityId: string, postId: string) {
   return `${communityPostPrefix}${normalizeCommunitySlug(communityId)}:${postId}`
 }
 
-export function readCommunityPost(value: unknown, communityId?: string): ZivoCommunityPost | null {
+export function readCommunityPost(value: unknown, communityId?: string): PulseCommunityPost | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null
   const record = value as Record<string, unknown>
   const normalizedCommunityId = typeof record.communityId === 'string' ? normalizeCommunitySlug(record.communityId) : ''
@@ -50,7 +50,7 @@ export function readCommunityPost(value: unknown, communityId?: string): ZivoCom
     !Number.isFinite(record.createdAt)
   ) return null
 
-  let parsedMedia: ZivoCommunityPostMedia | undefined
+  let parsedMedia: PulseCommunityPostMedia | undefined
   if (media !== undefined) {
     if (!media || typeof media !== 'object' || Array.isArray(media)) return null
     const mediaRecord = media as Record<string, unknown>
@@ -88,7 +88,7 @@ export async function loadCommunityPosts(communityId: string) {
   const result = await window.genmb.kv.list(`${communityPostPrefix}${normalizedCommunityId}:`)
   return result.data
     .map((entry) => readCommunityPost(entry.value, normalizedCommunityId))
-    .filter((post): post is ZivoCommunityPost => post !== null)
+    .filter((post): post is PulseCommunityPost => post !== null)
     .sort((first, second) => second.createdAt - first.createdAt)
 }
 
@@ -102,7 +102,7 @@ export async function createCommunityPost(input: {
   communityId: string
   authorUserId: string
   text: string
-  media?: ZivoCommunityPostMedia
+  media?: PulseCommunityPostMedia
 }) {
   const communityId = normalizeCommunitySlug(input.communityId)
   const authorUserId = input.authorUserId.trim()
@@ -128,7 +128,7 @@ export async function createCommunityPost(input: {
         filename: input.media.filename?.trim() || undefined,
       }
     : undefined
-  const post: ZivoCommunityPost = {
+  const post: PulseCommunityPost = {
     id: createPostId(),
     communityId: community.slug,
     authorUserId,

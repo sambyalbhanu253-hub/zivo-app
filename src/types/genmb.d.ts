@@ -1,7 +1,17 @@
+type GenMBDataOptions = {
+  scope?: 'user'
+  owned?: boolean
+}
+
 type GenMBKeyValueClient = {
-  get: (key: string) => Promise<unknown>
-  list: (prefix: string) => Promise<unknown>
-  set: (key: string, value: unknown) => Promise<unknown>
+  get: (key: string, options?: GenMBDataOptions) => Promise<unknown>
+  list: (prefix: string, options?: GenMBDataOptions) => Promise<unknown>
+  set: (key: string, value: unknown, options?: GenMBDataOptions) => Promise<unknown>
+  delete?: (key: string, options?: GenMBDataOptions) => Promise<unknown>
+}
+
+type GenMBStorageClient = {
+  upload: (file: File, options?: { folder?: string }) => Promise<{ url?: string }>
 }
 
 type GenMBRealtimeClient = {
@@ -11,6 +21,7 @@ type GenMBRealtimeClient = {
 
 type GenMBPlatformClient = {
   kv?: GenMBKeyValueClient
+  storage?: GenMBStorageClient
   realtime?: GenMBRealtimeClient
 }
 

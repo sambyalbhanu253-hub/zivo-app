@@ -1,11 +1,11 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace = "com.zivo.app"
+    namespace = "com.pulse.app"
     compileSdk = rootProject.ext.compileSdkVersion
     buildToolsVersion = "35.0.0"
     defaultConfig {
-        applicationId "com.zivo.app"
+        applicationId "com.pulse.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

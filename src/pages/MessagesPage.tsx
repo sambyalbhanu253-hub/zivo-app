@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { useAuth } from '../auth/AuthProvider'
 import Icon from '../components/Icon'
 
-const ROOM_ID = 'zivo-lounge'
-const MESSAGE_PREFIX = `zivo:message:${ROOM_ID}:`
-const ROOM_CHANNEL = `zivo:messages:${ROOM_ID}`
+const ROOM_ID = 'pulse-lounge'
+const MESSAGE_PREFIX = `pulse:message:${ROOM_ID}:`
+const ROOM_CHANNEL = `pulse:messages:${ROOM_ID}`
 
 type ChatMessage = {
   id: string
@@ -82,7 +81,18 @@ function formatFullTime(sentAt: number) {
 }
 
 export default function MessagesPage() {
-  const { user } = useAuth()
+  const [guestId] = useState(() => {
+    const storageKey = 'pulse:guest-id'
+    try {
+      const existingId = window.localStorage.getItem(storageKey)
+      if (existingId) return existingId
+      const newId = makeMessageId()
+      window.localStorage.setItem(storageKey, newId)
+      return newId
+    } catch {
+      return makeMessageId()
+    }
+  })
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [draft, setDraft] = useState('')
   const [isLoading, setIsLoading] = useState(true)
@@ -99,7 +109,7 @@ export default function MessagesPage() {
 
   const loadMessages = useCallback(async () => {
     const store = window.genmb?.kv
-    if (!store) throw new Error('The ZIVO message service is not available.')
+    if (!store) throw new Error('The PULSE message service is not available.')
     const response = await store.list(MESSAGE_PREFIX)
     const nextMessages = readEntries(response)
     latestMessagesRef.current = nextMessages
@@ -108,21 +118,20 @@ export default function MessagesPage() {
   }, [])
 
   const markMessagesSeen = useCallback(async (items: ChatMessage[]) => {
-    if (!user) return
     const store = window.genmb?.kv
     const realtime = window.genmb?.realtime
-    if (!store || !realtime) throw new Error('The ZIVO message service is not available.')
+    if (!store || !realtime) throw new Error('The PULSE message service is not available.')
 
-    const unread = items.filter((message) => message.senderId !== user.id && !message.readBy.includes(user.id))
+    const unread = items.filter((message) => message.senderId !== guestId && !message.readBy.includes(guestId))
     if (unread.length === 0) return
 
     const updatedMessages = new Map<string, ChatMessage>()
     for (const message of unread) {
       const key = `${MESSAGE_PREFIX}${message.id}`
       const current = readMessage(await store.get(key)) ?? message
-      const updated = current.readBy.includes(user.id)
+      const updated = current.readBy.includes(guestId)
         ? current
-        : { ...current, readBy: [...current.readBy, user.id] }
+        : { ...current, readBy: [...current.readBy, guestId] }
       if (updated !== current) await store.set(key, updated)
       updatedMessages.set(message.id, updated)
     }
@@ -130,7 +139,7 @@ export default function MessagesPage() {
     latestMessagesRef.current = nextMessages
     setMessages(nextMessages)
     await realtime.publish(ROOM_CHANNEL, { type: 'seen' })
-  }, [user])
+  }, [guestId])
 
   useEffect(() => {
     let active = true
@@ -179,10 +188,10 @@ export default function MessagesPage() {
 
   async function handleSend(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!user || isSending) return
+    if (isSending) return
     const store = window.genmb?.kv
     if (!store) {
-      setError('The ZIVO message service is not available.')
+      setError('The PULSE message service is not available.')
       return
     }
     const body = draft.trim()
@@ -197,8 +206,8 @@ export default function MessagesPage() {
     const message: ChatMessage = {
       id: makeMessageId(),
       roomId: ROOM_ID,
-      senderId: user.id,
-      senderName: user.displayName,
+      senderId: guestId,
+      senderName: `Guest ${guestId.slice(0, 4)}`,
       body,
       sentAt: Date.now(),
       readBy: [],
@@ -237,12 +246,12 @@ export default function MessagesPage() {
         <span className="messages-live-label"><span /> Live room</span>
       </header>
 
-      <section aria-label="ZIVO Lounge chat room" className="chat-room">
+      <section aria-label="PULSE Lounge chat room" className="chat-room">
         <header className="chat-room-header">
           <Link aria-label="Back to profile" className="chat-back-link" to="/profile">‹</Link>
           <div aria-hidden="true" className="chat-room-avatar">Z</div>
           <div className="chat-room-heading">
-            <h2>ZIVO Lounge</h2>
+            <h2>PULSE Lounge</h2>
             <p>Public community chat · messages sync live</p>
           </div>
           <span aria-label="Live connection" className="chat-online-indicator" />
@@ -259,7 +268,7 @@ export default function MessagesPage() {
             </div>
           ) : (
             messages.map((message) => {
-              const isOwn = message.senderId === user?.id
+              const isOwn = message.senderId === guestId
               const isSeen = message.readBy.some((readerId) => readerId !== message.senderId)
               return (
                 <article className={`chat-message${isOwn ? ' is-own' : ''}`} key={message.id}>
@@ -287,34 +296,27 @@ export default function MessagesPage() {
         </div>
 
         {error && <p className="chat-error" role="alert">{error}</p>}
-        {!user ? (
-          <div className="chat-signin-prompt">
-            <span>Sign in to join the conversation.</span>
-            <Link to="/sign-in">Sign in</Link>
-          </div>
-        ) : (
-          <form className="chat-composer" onSubmit={(event) => void handleSend(event)}>
-            <label className="visually-hidden" htmlFor="chat-message-input">Write a message</label>
-            <textarea
-              autoComplete="off"
-              id="chat-message-input"
-              maxLength={2000}
-              onChange={(event) => setDraft(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' && !event.shiftKey) {
-                  event.preventDefault()
-                  event.currentTarget.form?.requestSubmit()
-                }
-              }}
-              placeholder="Message the Lounge…"
-              rows={1}
-              value={draft}
-            />
-            <button aria-label="Send message"             disabled={!draft.trim() || isSending || isLoading} type="submit">
-              <Icon name="arrow" size={18} />
-            </button>
-          </form>
-        )}
+        <form className="chat-composer" onSubmit={(event) => void handleSend(event)}>
+          <label className="visually-hidden" htmlFor="chat-message-input">Write a message</label>
+          <textarea
+            autoComplete="off"
+            id="chat-message-input"
+            maxLength={2000}
+            onChange={(event) => setDraft(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault()
+                event.currentTarget.form?.requestSubmit()
+              }
+            }}
+            placeholder="Message the Lounge as a guest…"
+            rows={1}
+            value={draft}
+          />
+          <button aria-label="Send message" disabled={!draft.trim() || isSending || isLoading} type="submit">
+            <Icon name="arrow" size={18} />
+          </button>
+        </form>
         <p className="chat-room-note">Everyone in the room can read these messages · Enter sends, Shift + Enter adds a line</p>
       </section>
     </div>

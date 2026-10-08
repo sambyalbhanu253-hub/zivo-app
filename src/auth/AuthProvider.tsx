@@ -27,9 +27,9 @@ type AuthContextValue = {
   signOut: () => void
 }
 
-const ACCOUNTS_KEY = 'zivo.local-auth.accounts.v1'
-const SESSION_KEY = 'zivo.local-auth.session.v1'
-const LINKS_KEY = 'zivo.local-auth.links.v1'
+const ACCOUNTS_KEY = 'pulse.local-auth.accounts.v1'
+const SESSION_KEY = 'pulse.local-auth.session.v1'
+const LINKS_KEY = 'pulse.local-auth.links.v1'
 const LINK_LIFETIME = 15 * 60 * 1000
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -55,7 +55,7 @@ function toBase64(bytes: Uint8Array) {
 
 async function hashPassword(password: string, salt: string) {
   if (!crypto.subtle) {
-    throw new Error('Secure password storage is unavailable on this connection. Open ZIVO over HTTPS and try again.')
+    throw new Error('Secure password storage is unavailable on this connection. Open PULSE over HTTPS and try again.')
   }
   const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits'])
   const bits = await crypto.subtle.deriveBits(
@@ -75,7 +75,7 @@ function normalizeEmail(email: string) {
 }
 
 function accountName(email: string) {
-  return email.split('@')[0]?.replace(/[._+-]+/g, ' ').trim() || 'ZIVO creator'
+  return email.split('@')[0]?.replace(/[._+-]+/g, ' ').trim() || 'PULSE creator'
 }
 
 function makeUser(account: StoredAccount): LocalUser {
@@ -100,7 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setUser(readJson<LocalUser | null>(SESSION_KEY, null))
     } catch {
-      setError('ZIVO could not read saved sign-in data. Clear this app’s site storage and try again.')
+      setError('PULSE could not read saved sign-in data. Clear this app’s site storage and try again.')
     } finally {
       setReady(true)
     }
@@ -110,7 +110,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const email = normalizeEmail(emailInput)
     if (!validateEmail(email)) throw new Error('Enter a valid email address.')
     if (password.length < 8) throw new Error('Use a password with at least 8 characters.')
-    if (!crypto.subtle) throw new Error('Secure password storage is unavailable. Open ZIVO over HTTPS and try again.')
+    if (!crypto.subtle) throw new Error('Secure password storage is unavailable. Open PULSE over HTTPS and try again.')
     const accounts = getAccounts()
     const existingAccount = accounts.find((account) => account.email === email)
     if (existingAccount?.passwordHash) {

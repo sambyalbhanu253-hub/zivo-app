@@ -5,14 +5,16 @@ import Icon from './Icon'
 export default function AppShell() {
   const { pathname } = useLocation()
   const isShortsRoute = pathname === '/shorts' || pathname.startsWith('/shorts/')
+  const isStudioRoute = pathname === '/create'
+  const isProfileRoute = pathname === '/profile' || pathname.startsWith('/profile/')
+  const isImmersiveRoute = isShortsRoute || isStudioRoute
 
   return (
-    <div className={`app-frame${isShortsRoute ? ' shorts-frame' : ''}`}>
-      {!isShortsRoute && (
+    <div className={`app-frame${isShortsRoute ? ' shorts-frame' : ''}${isStudioRoute ? ' studio-frame' : ''}${isProfileRoute ? ' profile-route-frame' : ''}`}>
+      {!isImmersiveRoute && (
         <header className="app-header">
-          <Link aria-label="ZIVO home" className="brand" to="/">
-            <img alt="" className="brand-mark" height="42" src="/icons/zivo-icon-192.svg" width="42" />
-            <span>ZIVO</span>
+          <Link aria-label="PULSE home" className="brand" to="/">
+            <img alt="" className="brand-logo" height="42" src="/icons/pulse-brand.svg" width="166" />
           </Link>
           <span className="header-tagline">Watch what moves you.</span>
           <Link aria-label="Messages" className="header-message-link" to="/messages">
@@ -21,10 +23,10 @@ export default function AppShell() {
           </Link>
         </header>
       )}
-      <main className={`app-main${isShortsRoute ? ' shorts-main' : ''}`}>
+      <main className={`app-main${isShortsRoute ? ' shorts-main' : ''}${isStudioRoute ? ' studio-main' : ''}`}>
         <Outlet />
       </main>
-      {!isShortsRoute && <BottomNavigation />}
+      {!isImmersiveRoute && <BottomNavigation />}
     </div>
   )
 }

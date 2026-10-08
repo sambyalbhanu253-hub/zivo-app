@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '../auth/AuthProvider'
 import { validateText } from '../lib/textSafety'
 
-export type ZivoComment = {
+export type PulseComment = {
   id: string
   contentId: string
   contentType: 'post' | 'short'
@@ -16,9 +16,9 @@ export type ZivoComment = {
   }
 }
 
-type StoredComment = ZivoComment
+type StoredComment = PulseComment
 
-type CommentContentType = ZivoComment['contentType']
+type CommentContentType = PulseComment['contentType']
 
 type StoredProfile = {
   username: string
@@ -27,7 +27,7 @@ type StoredProfile = {
 }
 
 export function commentPrefix(contentType: CommentContentType, contentId: string) {
-  return `zivo:comment:public:${contentType}:${contentId}:`
+  return `pulse:comment:public:${contentType}:${contentId}:`
 }
 
 function readStoredProfile(value: unknown): StoredProfile | null {
@@ -41,7 +41,7 @@ export async function loadCommentCount(contentType: CommentContentType, contentI
   const result = await window.genmb.kv.list(commentPrefix(contentType, contentId))
   return result.data
     .map((entry) => readComment(entry.value, contentType, contentId))
-    .filter((comment): comment is ZivoComment => comment !== null)
+    .filter((comment): comment is PulseComment => comment !== null)
     .length
 }
 
@@ -104,7 +104,7 @@ export async function deleteCommentForContentOwner({ creatorId, contentId, conte
   if (!comment) throw new Error('This comment is no longer available.')
   await window.genmb.kv.delete(key)
   try {
-    await window.genmb.realtime.publish(`zivo:comments:${contentType}:${contentId}`, { changed: true })
+    await window.genmb.realtime.publish(`pulse:comments:${contentType}:${contentId}`, { changed: true })
   } catch {
     // Deletion is durable; other viewers can refresh if the live event fails.
   }
@@ -112,7 +112,7 @@ export async function deleteCommentForContentOwner({ creatorId, contentId, conte
 
 export default function usePersistentComments(contentType: CommentContentType, contentId: string, enabled: boolean) {
   const { user, loading: isAuthLoading } = useAuth()
-  const [comments, setComments] = useState<ZivoComment[]>([])
+  const [comments, setComments] = useState<PulseComment[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
@@ -126,7 +126,7 @@ export default function usePersistentComments(contentType: CommentContentType, c
       const result = await window.genmb.kv.list(commentPrefix(contentType, contentId))
       const nextComments = result.data
         .map((entry) => readComment(entry.value, contentType, contentId))
-        .filter((comment): comment is ZivoComment => comment !== null)
+        .filter((comment): comment is PulseComment => comment !== null)
         .sort((first, second) => first.createdAt - second.createdAt)
       setComments(nextComments)
     } catch (caughtError) {
@@ -139,7 +139,7 @@ export default function usePersistentComments(contentType: CommentContentType, c
   useEffect(() => {
     if (!enabled || !contentId) return
     void loadComments()
-    const unsubscribe = window.genmb.realtime.subscribe(`zivo:comments:${contentType}:${contentId}`, () => { void loadComments() })
+    const unsubscribe = window.genmb.realtime.subscribe(`pulse:comments:${contentType}:${contentId}`, () => { void loadComments() })
     return unsubscribe
   }, [enabled, contentId, contentType, loadComments])
 
@@ -156,10 +156,10 @@ export default function usePersistentComments(contentType: CommentContentType, c
     setError('')
     try {
       const trimmedText = validateText(text, 'Comment', 500, true)
-      const storedProfile = readStoredProfile(await window.genmb.kv.get(`zivo:profile:${user.id}`))
+      const storedProfile = readStoredProfile(await window.genmb.kv.get(`pulse:profile:${user.id}`))
       const authorName = storedProfile?.displayName.trim() || user.name.trim() || user.email.split('@')[0] || 'ZIVO member'
-      const username = storedProfile?.username.trim() || user.email.split('@')[0] || 'zivo.member'
-      const comment: ZivoComment = {
+      const username = storedProfile?.username.trim() || user.email.split('@')[0] || 'pulse.member'
+      const comment: PulseComment = {
         id: createCommentId(),
         contentId,
         contentType,
@@ -176,7 +176,7 @@ export default function usePersistentComments(contentType: CommentContentType, c
       await window.genmb.kv.set(`${commentPrefix(contentType, contentId)}${comment.id}`, comment)
       setComments((current) => [...current, comment])
       try {
-        await window.genmb.realtime.publish(`zivo:comments:${contentType}:${contentId}`, { changed: true })
+        await window.genmb.realtime.publish(`pulse:comments:${contentType}:${contentId}`, { changed: true })
       } catch (publishError) {
         setError(`Comment saved, but live updates failed: ${publishError instanceof Error ? publishError.message : String(publishError)}. Other viewers can refresh.`)
       }

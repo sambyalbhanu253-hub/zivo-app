@@ -4,7 +4,7 @@ A dark, mobile-first social video app with five primary tabs and routed creator,
 ## Masterplan
 
 - Keep Home, Shorts, Create, Discover, and Profile within immediate reach on mobile.
-- Make public browsing available without sign-in; require an account for personalized and creator actions.
+- Make public browsing available without sign-in; do not gate feed playback or primary navigation on an account.
 - Grow the foundation through routed experiences for content, communities, live sessions, messages, notifications, and creator tools.
 - Preserve upload activity across navigation; uploaded media is stored as private drafts.
 
@@ -14,8 +14,8 @@ A dark, mobile-first social video app with five primary tabs and routed creator,
 - **Routing and shell:** `src/main.tsx` mounts the app and providers; `src/App.tsx` defines routes. Main routes render through `src/components/AppShell.tsx`, which owns the shared header, outlet, bottom navigation, and upload context. Authentication routes are outside the shell.
 - **State:** Keep local UI state in pages and components, shared interaction logic in `src/hooks/`, and platform operations in `src/lib/`. `src/auth/AuthProvider.tsx` owns session state and exports `useAuth()`.
 - **Backend:** Use the GenMB SDK injected by `index.html` for auth, data, storage, and functions. SDK typings are in `src/types/genmb.d.ts`. There is no separate ZIVO REST API; route backend work through the SDK.
-- **Auth/RBAC:** The app auth provider offers local device authentication for APK/offline endpoint resilience; its demo verification links are local-only and do not send email. GenMB auth remains available for platform sessions. Set the role loader before awaiting `window.genmb.auth.ready()` when using RBAC. Role readiness is independent so public pages do not wait on permission checks.
-- **Android/PWA:** `capacitor.config.ts` loads the deployed HTTPS app URL in Android’s WebView. Deploy the app and SDK/API endpoints on that origin. `public/zivo-sw.js` deliberately bypasses navigation and auth/API requests; bump `CACHE_NAME` when changing shell caching.
+- **Auth/RBAC:** Public routes do not mount the local auth provider or require a session. GenMB auth remains available as a platform capability but is not required for browsing or playback. Set the role loader before awaiting `window.genmb.auth.ready()` if a future feature explicitly uses RBAC.
+- **Android/PWA:** `capacitor.config.ts` loads the deployed HTTPS app URL in Android’s WebView. Deploy the app and SDK/API endpoints on that origin. `public/pulse-sw.js` deliberately bypasses navigation and auth/API requests; bump `CACHE_NAME` when changing shell caching.
 - **Build caveat:** `scripts/build-android-apk.sh` requires installed Capacitor dependencies, Android SDK, JDK 17+, and `ZIVO_PRODUCTION_URL`. Run `npm run build` to type-check and create the Vite production bundle.
 
 ## File Structure
@@ -24,7 +24,7 @@ A dark, mobile-first social video app with five primary tabs and routed creator,
 index.html                              # App metadata, Manrope font, manifest, and GenMB SDK injection.
 capacitor.config.ts                    # Android WebView app identity and hosted URL configuration.
 public/manifest.json                   # Installable ZIVO app metadata and icon references.
-public/zivo-sw.js                      # PWA asset cache; navigation and API requests bypass cache.
+public/pulse-sw.js                      # PWA asset cache; navigation and API requests bypass cache.
 public/icons/                          # Royal Gold and Obsidian ZIVO icons, including 192px, 512px, and maskable variants.
 scripts/build-android-apk.sh           # Vite build, Capacitor sync, and debug APK build.
 .github/workflows/android_apk.yml      # APK workflow copy; verify this is the active GitHub workflow.
@@ -45,9 +45,9 @@ tsconfig.json                            # Strict TypeScript configuration.
 
 - **Primary navigation:** `src/components/BottomNavigation.tsx` links Home (`/`), Shorts (`/shorts`), Create (`/create`), Discover (`/discover`), and Profile (`/profile`). Create is visually elevated; active state is route-aware.
 - **Route shell:** `src/components/AppShell.tsx` wraps the five primary tab routes with the shared header and bottom bar. Shorts uses a full-viewport shell with no tab chrome.
-- **Shorts playback:** `src/pages/ShortsPage.tsx` reads published posts from the `zivo:post:` GenMB KV prefix, snaps one short per viewport, and pauses/mutes all videos outside the active visibility threshold.
+- **Shorts playback:** `src/pages/ShortsPage.tsx` reads published posts from the `pulse:post:` GenMB KV prefix, snaps one short per viewport, and pauses/mutes all videos outside the active visibility threshold.
 - **Routed experiences:** `src/App.tsx` currently registers Home, Shorts, Create, Discover, Profile, and a not-found screen. Additional routes can be added as their experiences are implemented.
-- **Auth and permissions:** `src/auth/AuthProvider.tsx` manages local device accounts, password sign-in, persisted sessions, and one-time demo verification links. These accounts are device-local, not server-backed identities. `functions/resolveRole.ts` returns `admin` with all permissions only for platform owners; other authenticated users get `viewer` with no permissions.
+- **Auth and permissions:** Public browsing has no authentication barrier. `src/auth/AuthProvider.tsx` remains an unused legacy provider; do not add it to the app root or require it for public routes. `functions/resolveRole.ts` returns `admin` with all permissions only for platform owners; other authenticated users get `viewer` with no permissions.
 - **Persistent interactions and domain services:** Hooks and `src/lib/` cover profiles, posts, likes, comments, follows, safety, search, sharing, live, messages, notifications, communities, and creator tools. Use these modules rather than embedding platform calls in presentation components.
 - **Media uploads:** `BackgroundUpload` is mounted above the route outlet so active work survives navigation. Store uploads as private drafts.
 - **Data tables:** `appSettings` stores `id`, `appName`, `startUrl`, `displayMode`, and `themeColor`. `profiles` stores `id`, `userId`, `displayName`, `bio`, and `avatarUrl`.
@@ -66,7 +66,7 @@ tsconfig.json                            # Strict TypeScript configuration.
 - The root route opens Home inside the shared shell. The bottom bar switches between the five primary destinations.
 - Shorts detail (`/shorts/:contentId`) and the Shorts feed use the full-screen Shorts layout; content details use `/content/:contentId`.
 - Secondary destinations—including `/communities`, `/live/:liveSessionId`, `/messages`, `/notifications`, and `/creator/*`—remain within the app shell.
-- `/sign-in`, `/sign-up`, and `/forgot-password` render outside the shell. Public browsing should not be blocked by RBAC readiness.
+- `/sign-in` and `/sign-up` legacy paths redirect to Home; public browsing does not wait on RBAC readiness.
 - Unknown routes render `NotFoundPage`. `AppErrorBoundary` contains rendering failures and offers a full refresh.
 - Android’s APK opens the configured hosted origin, not a locally bundled offline app. Ensure that origin serves the current app and GenMB API before distributing builds.
 

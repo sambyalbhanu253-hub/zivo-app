@@ -14,7 +14,7 @@ type FollowToggleResult = {
 };
 
 export function followPrefix(followerId: string) {
-  return `zivo:follow:${followerId}:`;
+  return `pulse:follow:${followerId}:`;
 }
 
 export function readFollowRelationship(value: unknown): FollowRelationship | null {

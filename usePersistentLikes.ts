@@ -21,7 +21,7 @@ type LikeToggleResult = {
 }
 
 function likePrefix(contentType: LikeContentType, contentId: string) {
-  return `zivo:like:public:${contentType}:${contentId}:`
+  return `pulse:like:public:${contentType}:${contentId}:`
 }
 
 function likeKey(contentType: LikeContentType, contentId: string, userId: string) {
