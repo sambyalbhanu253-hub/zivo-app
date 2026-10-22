@@ -7,11 +7,12 @@ export default function AppShell() {
   const isShortsRoute = pathname === '/shorts' || pathname.startsWith('/shorts/')
   const isStudioRoute = pathname === '/create'
   const isProfileRoute = pathname === '/profile' || pathname.startsWith('/profile/')
+  const isWatchRoute = pathname.startsWith('/watch/')
   const isImmersiveRoute = isShortsRoute || isStudioRoute
 
   return (
-    <div className={`app-frame${isShortsRoute ? ' shorts-frame' : ''}${isStudioRoute ? ' studio-frame' : ''}${isProfileRoute ? ' profile-route-frame' : ''}`}>
-      {!isImmersiveRoute && (
+    <div className={`app-frame${isShortsRoute ? ' shorts-frame' : ''}${isStudioRoute ? ' studio-frame' : ''}${isProfileRoute ? ' profile-route-frame' : ''}${isWatchRoute ? ' watch-frame' : ''}`}>
+      {!isImmersiveRoute && !isWatchRoute && (
         <header className="app-header">
           <Link aria-label="PULSE home" className="brand" to="/">
             <img alt="" className="brand-logo" height="42" src="/icons/pulse-brand.svg" width="166" />
@@ -26,7 +27,7 @@ export default function AppShell() {
       <main className={`app-main${isShortsRoute ? ' shorts-main' : ''}${isStudioRoute ? ' studio-main' : ''}`}>
         <Outlet />
       </main>
-      {!isImmersiveRoute && <BottomNavigation />}
+      {!isImmersiveRoute && !isWatchRoute && <BottomNavigation />}
     </div>
   )
 }

@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import Icon from './Icon'
 
 type LongVideoPlayerProps = {
   source: string
@@ -10,14 +9,12 @@ type LongVideoPlayerProps = {
 export default function LongVideoPlayer({ source, poster, title }: LongVideoPlayerProps) {
   const mountRef = useRef<HTMLDivElement>(null)
   const playerRef = useRef<HTMLVideoElement | null>(null)
-  const [isMuted, setIsMuted] = useState(true)
   const [hasPlaybackError, setHasPlaybackError] = useState(false)
   const [needsManualPlayback, setNeedsManualPlayback] = useState(false)
 
   useEffect(() => {
     const mount = mountRef.current
     if (!mount) return
-    setIsMuted(true)
     setHasPlaybackError(false)
     setNeedsManualPlayback(false)
 
@@ -34,7 +31,6 @@ export default function LongVideoPlayer({ source, poster, title }: LongVideoPlay
     player.style.width = '100%'
     player.style.height = '100%'
     player.addEventListener('error', () => setHasPlaybackError(true), { once: true })
-    player.addEventListener('volumechange', () => setIsMuted(player.muted))
     mount.replaceChildren(player)
     void player.play().catch(() => setNeedsManualPlayback(true))
 
@@ -45,35 +41,10 @@ export default function LongVideoPlayer({ source, poster, title }: LongVideoPlay
     }
   }, [poster, source, title])
 
-  const toggleMuted = () => {
-    const player = playerRef.current
-    if (!player) return
-
-    player.muted = !player.muted
-    setIsMuted(player.muted)
-    setNeedsManualPlayback(false)
-    if (!player.muted) {
-      void player.play().catch(() => {
-        player.muted = true
-        setIsMuted(true)
-        setNeedsManualPlayback(true)
-      })
-    }
-  }
-
   return (
     <>
       <div className="long-video-stage">
         <div aria-label={`Player for ${title}`} className="long-video-player" ref={mountRef} />
-        <button
-          aria-label={isMuted ? 'Unmute video' : 'Mute video'}
-          aria-pressed={!isMuted}
-          className="long-video-mute-button"
-          onClick={toggleMuted}
-          type="button"
-        >
-          <Icon name={isMuted ? 'volumeOff' : 'volumeOn'} size={21} />
-        </button>
       </div>
       {hasPlaybackError && (
         <p className="long-video-error" role="alert">

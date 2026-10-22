@@ -1,5 +1,7 @@
+import { useEffect, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import Icon, { type IconName } from '../components/Icon'
+import { DEFAULT_CHANNEL_PROFILE, loadChannelProfile, type ChannelProfile } from '../lib/channelProfile'
 
 const destinations: Record<string, { title: string; description: string; icon: IconName }> = {
   history: {
@@ -36,7 +38,17 @@ const destinations: Record<string, { title: string; description: string; icon: I
 
 export default function ProfileSectionPage() {
   const { section } = useParams()
+  const [channel, setChannel] = useState<ChannelProfile>(DEFAULT_CHANNEL_PROFILE)
+  const [profileError, setProfileError] = useState('')
   const destination = section ? destinations[section] : undefined
+
+  useEffect(() => {
+    try {
+      setChannel(loadChannelProfile())
+    } catch (reason) {
+      setProfileError(reason instanceof Error ? reason.message : 'Saved channel details could not be loaded.')
+    }
+  }, [])
 
   if (!destination) return <Navigate replace to="/profile" />
 
@@ -48,9 +60,17 @@ export default function ProfileSectionPage() {
       </Link>
       {section === 'channel' ? (
         <section className="profile-destination-channel">
-          <div aria-label="Bhanu Sambyal profile picture" className="profile-channel-avatar" role="img">BS</div>
-          <h1>{destination.title}</h1>
-          <p>{destination.description}</p>
+          <div
+            aria-label={`${channel.name} profile picture`}
+            className="profile-channel-avatar"
+            role="img"
+            style={channel.avatarUrl ? { backgroundImage: `url("${channel.avatarUrl}")` } : undefined}
+          >{!channel.avatarUrl && channel.name.slice(0, 1).toUpperCase()}</div>
+          <h1>{channel.name}</h1>
+          <p>@{channel.handle} · 1.64K subscribers · 64 videos</p>
+          {channel.description && <p>{channel.description}</p>}
+          {profileError && <p className="edit-channel-message is-error" role="alert">{profileError}</p>}
+          <Link className="profile-view-channel" to="/profile/edit-channel">Edit channel</Link>
         </section>
       ) : (
         <section aria-labelledby="profile-destination-title" className="profile-destination-content">

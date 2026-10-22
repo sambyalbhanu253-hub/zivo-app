@@ -37,6 +37,12 @@ npm install
 npm run dev
 ```
 
+### Google account connections
+
+The Accounts switcher uses the official Google Identity Services OAuth popup and requests only the OpenID Connect `openid email profile` scopes. Create a Google OAuth 2.0 **Web application** client ID, add each local/deployed app origin to its authorized JavaScript origins, then set `VITE_GOOGLE_CLIENT_ID` in the app's environment (see `.env.example`) before building or running Vite. Do not commit real credentials; the client ID is public configuration, not a client secret.
+
+The app verifies the Google profile email before saving the account. It stores only the returned profile fields and selected account in browser local storage; OAuth access tokens are kept transiently in memory and are never persisted. The displayed `@handle` is an app-style label derived from the Google account email, since basic Google profile consent does not provide a YouTube channel handle.
+
 ## Framework
 
 This project uses React 19, TypeScript, Vite, and React Router. The app entry point is `src/main.tsx`, routes are defined in `src/App.tsx`, and the five primary tab screens live in `src/pages/`. Shared layout components are in `src/components/`; global design styles are in `main.css` and `src/styles/app.css`.

@@ -9,6 +9,9 @@ export type IconName =
   | 'arrow'
   | 'back'
   | 'heart'
+  | 'thumbUp'
+  | 'thumbDown'
+  | 'bookmark'
   | 'volumeOn'
   | 'volumeOff'
   | 'share'
@@ -19,6 +22,8 @@ export type IconName =
   | 'download'
   | 'analytics'
   | 'chevron'
+  | 'camera'
+  | 'copy'
 
 type IconProps = {
   name: IconName
@@ -59,6 +64,12 @@ export default function Icon({ name, size = 20 }: IconProps) {
       return <svg {...shared}><path d="M19 12H5m7 7-7-7 7-7" /></svg>
     case 'heart':
       return <svg {...shared}><path d="M20.8 8.8c0 5.1-8.8 10-8.8 10s-8.8-4.9-8.8-10A4.8 4.8 0 0 1 12 6a4.8 4.8 0 0 1 8.8 2.8Z" /></svg>
+    case 'thumbUp':
+      return <svg {...shared}><path d="M7 10v11H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2zm0 0 5-8a3 3 0 0 1 2 3v3h5a3 3 0 0 1 3 3l-1.5 8a3 3 0 0 1-3 2H7" /></svg>
+    case 'thumbDown':
+      return <svg {...shared}><path d="M7 14V3H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2zm0 0 5 8a3 3 0 0 0 2-3v-3h5a3 3 0 0 0 3-3l-1.5-8a3 3 0 0 0-3-2H7" /></svg>
+    case 'bookmark':
+      return <svg {...shared}><path d="M6 4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18l-6-4-6 4z" /></svg>
     case 'volumeOn':
       return <svg {...shared}><path d="M11 5 6 9H3v6h3l5 4zM15.5 8.5a5 5 0 0 1 0 7m3-10a9 9 0 0 1 0 13" /></svg>
     case 'volumeOff':
@@ -79,5 +90,9 @@ export default function Icon({ name, size = 20 }: IconProps) {
       return <svg {...shared}><path d="M4 20V10m5 10V4m6 16v-7m5 7V7M2 20h20" /></svg>
     case 'chevron':
       return <svg {...shared}><path d="m9 18 6-6-6-6" /></svg>
+    case 'camera':
+      return <svg {...shared}><path d="M14 5h-4L8 8H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-3z" /><circle cx="12" cy="13" r="3" /></svg>
+    case 'copy':
+      return <svg {...shared}><rect x="8" y="8" width="12" height="12" rx="2" /><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3" /></svg>
   }
 }
